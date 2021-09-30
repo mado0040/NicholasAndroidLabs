@@ -1,14 +1,13 @@
 package algonquin.cst2335.mado0040;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.view.animation.Animation;
-import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.Switch;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,6 +32,9 @@ public class MainActivity extends AppCompatActivity {
 
                 imgView.startAnimation(rotate);
                     }
+            else {
+                imgView.clearAnimation();
+            }
                 });
             }
         }

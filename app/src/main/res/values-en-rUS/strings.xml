@@ -3,4 +3,7 @@
     <string name="app_name">Nicholas Android Labs</string>
     <string name="hello_message">Hello America!</string>
     <string name="button_message">I am an American button</string>
+    <string name="button3">I\'m American button 1!</string>
+    <string name="button4">I\'m American button 2!</string>
+    <string name="button5">I\'m American button 3!</string>
 </resources>

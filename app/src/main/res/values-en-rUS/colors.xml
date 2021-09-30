@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="my_primary">#012B2C</color>
-    <color name="my_secondary">#042E53</color>
-    <color name="my_statusbar">#109591</color>
+    <color name="my_primary">#E61313</color>
+    <color name="my_secondary">#F8F8F8</color>
+    <color name="my_statusbar">#0E2FD5</color>
     <color name="my_primary_night">#109591</color>
     <color name="my_secondary_night">#109591</color>
     <color name="my_statusbar_night">#109591</color>
