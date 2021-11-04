@@ -5,5 +5,5 @@
     <string name="spin_message" translatable="false">Spin Flag</string>
     <string name="button3">I\'m button 1!</string>
     <string name="button4">I\'m button 2!</string>
-    <string name="button5" >I\'m button 3!</string>
+    <string name="button5">I\'m button 3!</string>
 </resources>
