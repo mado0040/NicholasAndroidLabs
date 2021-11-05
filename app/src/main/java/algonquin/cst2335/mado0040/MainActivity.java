@@ -21,13 +21,19 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    /** This textView shows the feedback on the screen*/
+    /**
+     * This textView shows the feedback on the screen
+     */
     TextView feedbackText;
 
-    /** This button shows the LOGIN on the screen*/
+    /**
+     * This button shows the LOGIN on the screen
+     */
     Button loginButton;
 
-    /** This editText allows the user to input a password*/
+    /**
+     * This editText allows the user to input a password
+     */
     EditText passwordText;
 
     @Override
@@ -44,8 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
             if (checkPasswordComplexity(password))
                 feedbackText.setText("Your password is complex enough.");
-            else ;
-            feedbackText.setText("Your password is not compelex enough!");
+            else if (!checkPasswordComplexity(password))
+            feedbackText.setText("Your password is not complex enough!");
         });
     }
 
@@ -75,41 +81,45 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         /**
-        * NOTE: I decided to use the setError with the drawable icon for all four because I like the
-        * design of it better than a toast message.
-        */
-        if(!foundLowerCase)
+         * NOTE: I decided to use the setError with the drawable icon for all four because I like the
+         * design of it better than a toast message.
+         */
+        if (!foundLowerCase) {
             passwordText.setError("Missing a lowercase letter!");
-        if(!foundSpecial)
+            return false;
+        } else if (!foundSpecial) {
             passwordText.setError("Missing the special character!");
-        if(!foundUpperCase)
+            return false;
+        } else if (!foundUpperCase) {
             passwordText.setError("Missing an upercase letter!");
-        if(!foundNumber)
+            return false;
+        } else if (!foundNumber) {
             passwordText.setError("Missing a number!");
+            return false;
+        }
 
         //If anything is false, then it's not in the password;
-        return foundLowerCase && foundSpecial;// && foundNumber && foundUpperCase;
+        return foundLowerCase && foundSpecial && foundNumber && foundUpperCase;
     }
-
-        /** This returns true if c is one of the #$%^&*!@? characters, false if otherwise.
-         *
-         * @param c The character that we are checking for a special character.
-         * @return True if c is a special character (#$%^&*!@?), false if otherwise.
-         */
-        private boolean isSpecialCharacter ( char c){
-            switch (c) {
-                case '#':
-                case '$':
-                case '%':
-                case '^':
-                case '&':
-                case '*':
-                case '!':
-                case '@':
-                case '?':
-                    return true;
-                default:
-                    return false;
-            }
+    /** This returns true if c is one of the #$%^&*!@? characters, false if otherwise.
+     *
+     * @param c The character that we are checking for a special character.
+     * @return True if c is a special character (#$%^&*!@?), false if otherwise.
+     */
+    private boolean isSpecialCharacter ( char c){
+        switch (c) {
+            case '#':
+            case '$':
+            case '%':
+            case '^':
+            case '&':
+            case '*':
+            case '!':
+            case '@':
+            case '?':
+                return true;
+            default:
+                return false;
         }
     }
+}
