@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <Button
-        android:id="@+id/button12"
+        android:id="@+id/sendButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SEND"
@@ -14,7 +14,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/button13"
+        android:id="@+id/recieveButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="RECIEVE"
@@ -31,8 +31,8 @@
         android:inputType="textPersonName"
         android:text="Name"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button13"
-        app:layout_constraintStart_toEndOf="@+id/button12" />
+        app:layout_constraintEnd_toStartOf="@+id/recieveButton"
+        app:layout_constraintStart_toEndOf="@+id/sendButton" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/mrRecycler"
