@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="detailsRoom" type="id" />
+    <item name="enterEmail" type="id" />
+    <item name="enterPassword" type="id" />
+    <item name="login" type="id" />
 </resources>
