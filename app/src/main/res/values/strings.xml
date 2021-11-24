@@ -1,9 +1,15 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Nicholas Android Labs</string>
-    <string name="hello_message">Hello World!</string>
-    <string name="button_message">I\'m a button</string>
-    <string name="spin_message" translatable="false">Spin Flag</string>
-    <string name="button3">I\'m button 1!</string>
-    <string name="button4">I\'m button 2!</string>
-    <string name="button5">I\'m button 3!</string>
+    <string name="email_address" translatable="false">Enter your email address:</string>
+    <string name="hintText" translatable="false">Type email here</string>
+    <string name="email_password" translatable="false">Type your password:</string>
+    <string name="button_message">LOGIN</string>
+    <string name="delete" translatable="false">DELETE</string>
+    <string name="close" translatable="false">CLOSE</string>
+    <string name="database_id_goes_here" translatable="false">Database id goes here</string>
+    <string name="send_receive_goes_here" translatable="false">send receive goes here</string>
+    <string name="messagegoeshere" translatable="false">MessageGoesHere</string>
+    <string name="message_goes_here" translatable="false">Message goes here</string>
+    <string name="messgae_goes_here" translatable="false">Messgae goes here</string>
+    <string name="time_goes_here" translatable="false">Time goes here</string>
 </resources>

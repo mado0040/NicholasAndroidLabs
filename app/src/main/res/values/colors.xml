@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="my_primary">#012B2C</color>
-    <color name="my_secondary">#042E53</color>
-    <color name="my_statusbar">#109591</color>
-    <color name="my_primary_night">#109591</color>
-    <color name="my_secondary_night">#109591</color>
-    <color name="my_statusbar_night">#109591</color>
-    <color name="my_text">#540561</color>
+    <color name="my_primary">#4CAF50</color>
+    <color name="my_secondary">#3F51B5</color>
+    <color name="my_statusbar">#FFEB3B</color>
+    <color name="my_text">#ED0A0A</color>
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>
