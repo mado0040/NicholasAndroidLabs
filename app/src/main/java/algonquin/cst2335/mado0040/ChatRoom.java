@@ -28,7 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
-
+// test
 public class ChatRoom extends AppCompatActivity{
 
     boolean isTablet = false;
