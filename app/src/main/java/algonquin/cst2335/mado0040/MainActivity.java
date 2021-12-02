@@ -1,14 +1,41 @@
 package algonquin.cst2335.mado0040;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * @author Nicholas Madore
@@ -21,105 +48,126 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    private String stringURL;
+
     /**
      * This textView shows the feedback on the screen
      */
-    TextView feedbackText;
+    TextView tv = null;
 
     /**
      * This button shows the LOGIN on the screen
      */
-    Button loginButton;
+    Button forecastBtn = null;
 
     /**
      * This editText allows the user to input a password
      */
-    EditText passwordText;
+    EditText cityText = null;
 
+    Bitmap image;
+    ImageView iv = null;
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        feedbackText = findViewById(R.id.textView);
-        passwordText = findViewById(R.id.editText);
-        loginButton = findViewById(R.id.button);
+        Button forecastBtn = findViewById(R.id.forecastButton);
+        EditText cityText = findViewById(R.id.cityTextField);
 
-        loginButton.setOnClickListener((click) -> {
-            String password = passwordText.getText().toString(); // ""
+        forecastBtn.setOnClickListener(clk -> {
+        Executor newThread = Executors.newSingleThreadExecutor();
+        newThread.execute( () -> {
 
-            if (checkPasswordComplexity(password))
-                feedbackText.setText("Your password is complex enough.");
-            else if (!checkPasswordComplexity(password))
-            feedbackText.setText("Your password is not complex enough!");
+            String cityName = cityText.getText().toString();
+            try {
+
+
+                stringURL = "https://api.openweathermap.org/data/2.5/weather?q="
+                        + URLEncoder.encode(cityName, "UTF-8")
+                        + "&appid=7e943c97096a9784391a981c4d878b22&units=metric";
+
+                URL url = new URL(stringURL);
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+
+                String text = (new BufferedReader(
+                        new InputStreamReader(in, StandardCharsets.UTF_8)))
+                        .lines()
+                        .collect(Collectors.joining("\n"));
+
+                JSONObject theDocument = new JSONObject( text );
+
+                JSONObject coord = theDocument.getJSONObject( "coord" );
+
+                JSONArray weatherArray = theDocument.getJSONArray( "weather" );
+                JSONObject position0 = weatherArray.getJSONObject(0);
+
+                JSONObject mainObject = theDocument.getJSONObject( "main" );
+                double current = mainObject.getDouble( "temp");
+                double min = mainObject.getDouble( "temp_min" );
+                double max = mainObject.getDouble( "temp_max");
+                int humidity = mainObject.getInt( "humidity" );
+
+                String description = position0.getString( "description" );
+                String iconName = position0.getString( "icon");
+
+                File file = new File(getFilesDir(), iconName + ".png");
+
+                if(file.exists()) {
+                    image = BitmapFactory.decodeFile(getFilesDir() + "/" + iconName + ".png");
+                }else {
+                    URL imgUrl = new URL("https://openweathermap.org/img/w/" + iconName + ".png");
+                    HttpURLConnection imgConnection = (HttpURLConnection) imgUrl.openConnection();
+                    imgConnection.connect();
+                    int responseCode = imgConnection.getResponseCode();
+                    if (responseCode == 200) {
+                        image = BitmapFactory.decodeStream(imgConnection.getInputStream());
+                        image.compress(Bitmap.CompressFormat.PNG, 100, openFileOutput(iconName + ".png", Activity.MODE_PRIVATE));
+                    }
+                    FileOutputStream fOut = null;
+                    try {
+                        fOut = openFileOutput(iconName + ".png", Context.MODE_PRIVATE);
+                        image.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+                        fOut.flush();
+                        fOut.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                runOnUiThread(  ( ) -> {
+                    TextView tv = findViewById(R.id.temp);
+                    tv.setText("The current temperature is " + current + " " + iconName);
+                    tv.setVisibility(View.VISIBLE);
+
+                    tv = findViewById(R.id.minTemp);
+                    tv.setText("The min temperature is " + min);
+                    tv.setVisibility(View.VISIBLE);
+
+                    tv = findViewById(R.id.maxTemp);
+                    tv.setText("The max temperature is " + max);
+                    tv.setVisibility(View.VISIBLE);
+
+                    tv = findViewById(R.id.humidity);
+                    tv.setText("The humidity is " + humidity + "%");
+                    tv.setVisibility(View.VISIBLE);
+
+                    ImageView iv = findViewById(R.id.icon);
+                    iv.setImageBitmap(image);
+                    iv.setVisibility(View.VISIBLE);
+
+                    tv = findViewById(R.id.description);
+                    tv.setText("Description: " + description);
+                    tv.setVisibility(View.VISIBLE);
+                });
+
+            }catch(IOException | JSONException ioe) {
+                Log.e("Connection error:", ioe.getMessage());
+                }
+            });
         });
-    }
-
-    /**
-     * This function ensures that password has uppercase, lowercase, number, and special
-     * character.
-     *
-     * @param password Non-null String of tge user typed in the editText.
-     * @return True if all conditions are met, false if otherwise.
-     */
-    private boolean checkPasswordComplexity(@NonNull String password) {
-        boolean foundUpperCase, foundLowerCase, foundNumber, foundSpecial;
-        foundUpperCase = foundLowerCase = foundNumber = foundSpecial = false;
-
-        //Start the loop
-        for (int i = 0; i < password.length(); i++) {
-            char c = password.charAt(i);
-            Log.i("Looking at char:", "" + c);
-            if (Character.isLowerCase(c))
-                foundLowerCase = true;
-            if (Character.isUpperCase(c))
-                foundUpperCase = true;
-            if (Character.isDigit(c))
-                foundNumber = true;
-            if (isSpecialCharacter(c)) {
-                foundSpecial = true;
-            }
-        }
-        /**
-         * NOTE: I decided to use the setError with the drawable icon for all four because I like the
-         * design of it better than a toast message.
-         */
-        if (!foundLowerCase) {
-            passwordText.setError("Missing a lowercase letter!");
-            return false;
-        } else if (!foundSpecial) {
-            passwordText.setError("Missing the special character!");
-            return false;
-        } else if (!foundUpperCase) {
-            passwordText.setError("Missing an upercase letter!");
-            return false;
-        } else if (!foundNumber) {
-            passwordText.setError("Missing a number!");
-            return false;
-        }
-
-        //If anything is false, then it's not in the password;
-        return foundLowerCase && foundSpecial && foundNumber && foundUpperCase;
-    }
-    /** This returns true if c is one of the #$%^&*!@? characters, false if otherwise.
-     *
-     * @param c The character that we are checking for a special character.
-     * @return True if c is a special character (#$%^&*!@?), false if otherwise.
-     */
-    private boolean isSpecialCharacter ( char c){
-        switch (c) {
-            case '#':
-            case '$':
-            case '%':
-            case '^':
-            case '&':
-            case '*':
-            case '!':
-            case '@':
-            case '?':
-                return true;
-            default:
-                return false;
-        }
     }
 }
