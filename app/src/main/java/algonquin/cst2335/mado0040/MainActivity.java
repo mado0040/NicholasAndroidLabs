@@ -4,6 +4,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,11 +15,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -68,31 +73,73 @@ public class MainActivity extends AppCompatActivity {
     Bitmap image;
     ImageView iv = null;
 
+    String description = null;
+    String iconName = null;
+    String current = null;
+    String min = null;
+    String max = null;
+    String humidity = null;
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button forecastBtn = findViewById(R.id.forecastButton);
-        EditText cityText = findViewById(R.id.cityTextField);
+        forecastBtn = findViewById(R.id.forecastButton);
+        cityText = findViewById(R.id.cityTextField);
 
         forecastBtn.setOnClickListener(clk -> {
-        Executor newThread = Executors.newSingleThreadExecutor();
-        newThread.execute( () -> {
-
             String cityName = cityText.getText().toString();
-            try {
 
+            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Getting firecast")
+                    .setMessage("We're calling people in " + cityName + " to look outside their windows and tell us what's the weather like over there.")
+                    .setView(new ProgressBar(MainActivity.this))
+                    .show();
+
+            Executor newThread = Executors.newSingleThreadExecutor();
+            newThread.execute(() -> {
+
+            try {
 
                 stringURL = "https://api.openweathermap.org/data/2.5/weather?q="
                         + URLEncoder.encode(cityName, "UTF-8")
-                        + "&appid=7e943c97096a9784391a981c4d878b22&units=metric";
+                        + "&appid=7e943c97096a9784391a981c4d878b22&units=metric&mode=xml";
 
                 URL url = new URL(stringURL);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
 
+                XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+                factory.setNamespaceAware(false);
+                XmlPullParser xpp = factory.newPullParser();
+                xpp.setInput(in, "UTF-8");
+
+
+                while (xpp.next() != XmlPullParser.END_DOCUMENT){
+                    switch (xpp.getEventType()){
+                        case XmlPullParser.START_TAG:
+                            if(xpp.getName().equals("temperature")){
+                                current = xpp.getAttributeValue(null, "value");
+                                min = xpp.getAttributeValue(null, "min");
+                                max = xpp.getAttributeValue(null, "max");
+                            }else if(xpp.getName().equals("weather")){
+                                description = xpp.getAttributeValue(null, "value");
+                                iconName = xpp.getAttributeValue(null, "icon");
+                            }else if(xpp.getName().equals("humidity")){
+                                humidity = xpp.getAttributeValue(null, "humidity");
+                        }
+                        break;
+                        case XmlPullParser.END_TAG:
+
+                        break;
+                        case XmlPullParser.TEXT:
+
+                        break;
+                    }
+                }
+                /*
                 String text = (new BufferedReader(
                         new InputStreamReader(in, StandardCharsets.UTF_8)))
                         .lines()
@@ -113,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
                 String description = position0.getString( "description" );
                 String iconName = position0.getString( "icon");
+                */
 
                 File file = new File(getFilesDir(), iconName + ".png");
 
@@ -160,11 +208,13 @@ public class MainActivity extends AppCompatActivity {
                     iv.setVisibility(View.VISIBLE);
 
                     tv = findViewById(R.id.description);
-                    tv.setText("Description: " + description);
+                    tv.setText(description);
                     tv.setVisibility(View.VISIBLE);
+
+                    dialog.hide();
                 });
 
-            }catch(IOException | JSONException ioe) {
+            }catch(IOException | XmlPullParserException ioe) {
                 Log.e("Connection error:", ioe.getMessage());
                 }
             });
