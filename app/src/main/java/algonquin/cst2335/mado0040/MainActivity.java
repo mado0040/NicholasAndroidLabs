@@ -1,7 +1,12 @@
 package algonquin.cst2335.mado0040;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -11,12 +16,18 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.material.navigation.NavigationView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,36 +50,20 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-/**
- * @author Nicholas Madore
- * @version 1.0
- * @description This page holds the variables for textView, editText, and Button. It then holds
- *  functions to test that the users entered password is in a valid format. If it is not,
- *  it then returns false, giving the user a @toast message telling the user that their
- *  password is in invalid format or missing required characters.
- */
+
 
 public class MainActivity extends AppCompatActivity {
 
+    /** This string represents the address of the server we will connect to */
     private String stringURL;
-
-    /**
-     * This textView shows the feedback on the screen
-     */
+    /** This holds the text at the centre of the screen*/
     TextView tv = null;
-
-    /**
-     * This button shows the LOGIN on the screen
-     */
-    Button forecastBtn = null;
-
-    /**
-     * This editText allows the user to input a password
-     */
+    /**This holds the edit text for user input which is below the prompt text on the srceen*/
     EditText cityText = null;
+    /**This holds the button below the line of input on the screen*/
+    Button forecastBtn = null;
 
     Bitmap image;
     ImageView iv = null;
@@ -80,29 +75,81 @@ public class MainActivity extends AppCompatActivity {
     String max = null;
     String humidity = null;
 
+    TextView currentTemp = null;
+    TextView maxTemp = null;
+    TextView minTemp = null;
+    TextView humidityT = null;
+    TextView descriptionT = null;
+    ImageView icon = null;
+    EditText cityField = null;
+    float oldSize = 14;
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actions,menu);
+        return true;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public boolean onOptionsItemSelected(MenuItem item) {
+        currentTemp = findViewById(R.id.temp);
+        maxTemp = findViewById(R.id.maxTemp);
+        minTemp = findViewById(R.id.minTemp);
+        humidityT = findViewById(R.id.humidity);
+        descriptionT = findViewById(R.id.description);
+        icon = findViewById(R.id.icon);
+        cityField = findViewById(R.id.cityTextField);
+        switch (item.getItemId()) {
+            case 5:
+                String cityName = item.getTitle().toString();
+                runForecast(cityName);
+                break;
+            case R.id.hide_views:
+                currentTemp.setVisibility(View.INVISIBLE);
+                maxTemp.setVisibility(View.INVISIBLE);
+                minTemp.setVisibility(View.INVISIBLE);
+                humidityT.setVisibility(View.INVISIBLE);
+                descriptionT.setVisibility(View.INVISIBLE);
+                icon.setVisibility(View.INVISIBLE);
+                cityField.setText("");
+                break;
+            case R.id.id_increase:
+                oldSize++;
+                currentTemp.setTextSize(oldSize);
+                minTemp.setTextSize(oldSize);
+                maxTemp.setTextSize(oldSize);
+                humidityT.setTextSize(oldSize);
+                descriptionT.setTextSize(oldSize);
+                cityField.setTextSize(oldSize);
+                break;
+            case R.id.id_decrease:
+                oldSize = Float.max(oldSize-1,5);
+                currentTemp.setTextSize(oldSize);
+                minTemp.setTextSize(oldSize);
+                maxTemp.setTextSize(oldSize);
+                humidityT.setTextSize(oldSize);
+                descriptionT.setTextSize(oldSize);
+                cityField.setTextSize(oldSize);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
-        forecastBtn = findViewById(R.id.forecastButton);
-        cityText = findViewById(R.id.cityTextField);
+    private void runForecast(String cityName) {
+        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Getting forecast")
+                .setMessage("We're calling people in " + cityName + " to look outside their windows and tell us what's the weather like over there.")
+                .setView(new ProgressBar(MainActivity.this))
+                .show();
 
-        forecastBtn.setOnClickListener(clk -> {
-            String cityName = cityText.getText().toString();
+        Executor newThread = Executors.newSingleThreadExecutor();
+        newThread.execute(() -> {
+            //This runs on another thread
 
-            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Getting firecast")
-                    .setMessage("We're calling people in " + cityName + " to look outside their windows and tell us what's the weather like over there.")
-                    .setView(new ProgressBar(MainActivity.this))
-                    .show();
-
-            Executor newThread = Executors.newSingleThreadExecutor();
-            newThread.execute(() -> {
-
-            try {
-
+            try{
                 stringURL = "https://api.openweathermap.org/data/2.5/weather?q="
                         + URLEncoder.encode(cityName, "UTF-8")
                         + "&appid=7e943c97096a9784391a981c4d878b22&units=metric&mode=xml";
@@ -116,7 +163,6 @@ public class MainActivity extends AppCompatActivity {
                 XmlPullParser xpp = factory.newPullParser();
                 xpp.setInput(in, "UTF-8");
 
-
                 while (xpp.next() != XmlPullParser.END_DOCUMENT){
                     switch (xpp.getEventType()){
                         case XmlPullParser.START_TAG:
@@ -125,48 +171,26 @@ public class MainActivity extends AppCompatActivity {
                                 min = xpp.getAttributeValue(null, "min");
                                 max = xpp.getAttributeValue(null, "max");
                             }else if(xpp.getName().equals("weather")){
-                                description = xpp.getAttributeValue(null, "value");
+                                description= xpp.getAttributeValue(null, "value");
                                 iconName = xpp.getAttributeValue(null, "icon");
                             }else if(xpp.getName().equals("humidity")){
                                 humidity = xpp.getAttributeValue(null, "humidity");
-                        }
-                        break;
+                            }
+                            break;
                         case XmlPullParser.END_TAG:
 
-                        break;
+                            break;
                         case XmlPullParser.TEXT:
 
-                        break;
+                            break;
                     }
                 }
-                /*
-                String text = (new BufferedReader(
-                        new InputStreamReader(in, StandardCharsets.UTF_8)))
-                        .lines()
-                        .collect(Collectors.joining("\n"));
-
-                JSONObject theDocument = new JSONObject( text );
-
-                JSONObject coord = theDocument.getJSONObject( "coord" );
-
-                JSONArray weatherArray = theDocument.getJSONArray( "weather" );
-                JSONObject position0 = weatherArray.getJSONObject(0);
-
-                JSONObject mainObject = theDocument.getJSONObject( "main" );
-                double current = mainObject.getDouble( "temp");
-                double min = mainObject.getDouble( "temp_min" );
-                double max = mainObject.getDouble( "temp_max");
-                int humidity = mainObject.getInt( "humidity" );
-
-                String description = position0.getString( "description" );
-                String iconName = position0.getString( "icon");
-                */
 
                 File file = new File(getFilesDir(), iconName + ".png");
 
-                if(file.exists()) {
+                if(file.exists()){
                     image = BitmapFactory.decodeFile(getFilesDir() + "/" + iconName + ".png");
-                }else {
+                }else{
                     URL imgUrl = new URL("https://openweathermap.org/img/w/" + iconName + ".png");
                     HttpURLConnection imgConnection = (HttpURLConnection) imgUrl.openConnection();
                     imgConnection.connect();
@@ -177,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     FileOutputStream fOut = null;
                     try {
-                        fOut = openFileOutput(iconName + ".png", Context.MODE_PRIVATE);
+                        fOut = openFileOutput( iconName + ".png", Context.MODE_PRIVATE);
                         image.compress(Bitmap.CompressFormat.PNG, 100, fOut);
                         fOut.flush();
                         fOut.close();
@@ -186,24 +210,26 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                runOnUiThread(  ( ) -> {
-                    TextView tv = findViewById(R.id.temp);
-                    tv.setText("The current temperature is " + current + " " + iconName);
-                    tv.setVisibility(View.VISIBLE);
 
-                    tv = findViewById(R.id.minTemp);
-                    tv.setText("The min temperature is " + min);
+
+                runOnUiThread(( ) -> {
+                    tv = findViewById(R.id.temp);
+                    tv.setText("The current temperature is " + current);
                     tv.setVisibility(View.VISIBLE);
 
                     tv = findViewById(R.id.maxTemp);
                     tv.setText("The max temperature is " + max);
                     tv.setVisibility(View.VISIBLE);
 
-                    tv = findViewById(R.id.humidity);
-                    tv.setText("The humidity is " + humidity + "%");
+                    tv = findViewById(R.id.minTemp);
+                    tv.setText("The min temperature is " + min);
                     tv.setVisibility(View.VISIBLE);
 
-                    ImageView iv = findViewById(R.id.icon);
+                    tv = findViewById(R.id.humidity);
+                    tv.setText("The humitidy is " + humidity + "%");
+                    tv.setVisibility(View.VISIBLE);
+
+                    iv = findViewById(R.id.icon);
                     iv.setImageBitmap(image);
                     iv.setVisibility(View.VISIBLE);
 
@@ -213,11 +239,44 @@ public class MainActivity extends AppCompatActivity {
 
                     dialog.hide();
                 });
-
-            }catch(IOException | XmlPullParserException ioe) {
+            }catch (IOException | XmlPullParserException ioe){
                 Log.e("Connection error:", ioe.getMessage());
-                }
-            });
+            }
+        });
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        cityText = findViewById(R.id.cityTextField);
+        forecastBtn = findViewById(R.id.forecastButton);
+
+        Toolbar myToolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(myToolbar);
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, myToolbar, R.string.open, R.string.close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = findViewById(R.id.popout_menu);
+        navigationView.setNavigationItemSelectedListener((item) -> {
+
+            onOptionsItemSelected(item);
+            drawer.closeDrawer(GravityCompat.START);
+            return false;
+        });
+
+
+        forecastBtn.setOnClickListener(clk -> {
+            String cityName = cityText.getText().toString();
+
+
+            myToolbar.getMenu().add(0,5,0,cityName).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+            runForecast(cityName);
         });
     }
 }
